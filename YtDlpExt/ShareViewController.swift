@@ -10,26 +10,6 @@ import Carbon
 
 class ShareViewController: NSViewController {
 
-    var script: NSAppleScript = {
-        let script = NSAppleScript(source: """
-            on download(url)
-                tell application "iTerm2"
-                  set newWindow to (create window with default profile)
-                  tell current session of newWindow
-                      write text "cd ~/Movies "
-                      write text "yt-dlp 'https://www.youtube.com/watch?v=m9EX0f6V11Y' || sleep 1000 "
-                      write text "sleep 3 "
-                      write text "exit "
-                  end tell
-                end tell
-            end download
-            """
-        )!
-        let success = script.compileAndReturnError(nil)
-        assert(success)
-        return script
-    }()
-    
     override var nibName: NSNib.Name? {
         return NSNib.Name("ShareViewController")
     }
@@ -76,24 +56,20 @@ class ShareViewController: NSViewController {
 
     // Adapted from https://developer.apple.com/forums/thread/98830
     func startDownload(_ url: String) {
-        let parameters = NSAppleEventDescriptor.list()
-        parameters.insert(NSAppleEventDescriptor(string: url), at: 0)
-
-        let event = NSAppleEventDescriptor(
-            eventClass: AEEventClass(kASAppleScriptSuite),
-            eventID: AEEventID(kASSubroutineEvent),
-            targetDescriptor: nil,
-            returnID: AEReturnID(kAutoGenerateReturnID),
-            transactionID: AETransactionID(kAnyTransactionID)
-        )
-        event.setDescriptor(NSAppleEventDescriptor(string: "download"), forKeyword: AEKeyword(keyASSubroutineName))
-        event.setDescriptor(parameters, forKeyword: AEKeyword(keyDirectObject))
-
-        var error: NSDictionary? = nil
-        let result = self.script.executeAppleEvent(event, error: &error) as NSAppleEventDescriptor?
-        NSLog("error: %@", error.debugDescription)
-        NSLog("result: %@", result.debugDescription)
+        urlLabel.stringValue = url
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/home/tim/Movies/yt-dlp")
+//        task.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/yt-dlp")
+        task.arguments = [url]
+        task.currentDirectoryURL = URL(fileURLWithPath: "/home/tim/Movies", isDirectory: true)
+        do {
+            try task.run()
+        } catch {
+            NSLog("Unexpected error: \(error).")
+        }
     }
+    
+    @IBOutlet weak var urlLabel: NSTextField!
     
     @IBAction func send(_ sender: AnyObject?) {
         let outputItem = NSExtensionItem()
