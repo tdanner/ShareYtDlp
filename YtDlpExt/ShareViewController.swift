@@ -13,13 +13,13 @@ class ShareViewController: NSViewController {
     var script: NSAppleScript = {
         let script = NSAppleScript(source: """
             on download(url)
-                tell application \"iTerm2\"
+                tell application "iTerm2"
                   set newWindow to (create window with default profile)
                   tell current session of newWindow
-                      write text \"cd ~/Movies \"
-                      write text \"yt-dlp 'https://www.youtube.com/watch?v=m9EX0f6V11Y' || sleep 1000 \"
-                      write text \"sleep 3 \"
-                      write text \"exit \"
+                      write text "cd ~/Movies "
+                      write text "yt-dlp 'https://www.youtube.com/watch?v=m9EX0f6V11Y' || sleep 1000 "
+                      write text "sleep 3 "
+                      write text "exit "
                   end tell
                 end tell
             end download
@@ -90,7 +90,9 @@ class ShareViewController: NSViewController {
         event.setDescriptor(parameters, forKeyword: AEKeyword(keyDirectObject))
 
         var error: NSDictionary? = nil
-        _ = self.script.executeAppleEvent(event, error: &error) as NSAppleEventDescriptor?
+        let result = self.script.executeAppleEvent(event, error: &error) as NSAppleEventDescriptor?
+        NSLog("error: %@", error.debugDescription)
+        NSLog("result: %@", result.debugDescription)
     }
     
     @IBAction func send(_ sender: AnyObject?) {
